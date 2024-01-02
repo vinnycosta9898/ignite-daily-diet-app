@@ -1,0 +1,214 @@
+import { useContext, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form'
+import { Ionicons } from "@expo/vector-icons";
+import { RegularText, TitleText } from "../../components/Typegraphy";
+import { EditMealContainer, EditMealHeaderContainer, BackButton, EditMealForm, Row, Column, OptionsButtonsContainer, ButtonContainer, ErrorText } from "./styles";
+import { useTheme } from "styled-components";
+import { Input } from "../../components/Input";
+import { Button } from "../../components/Button";
+import { OptionButton } from "../NewMeal/components/OptionButton";
+import { TouchableOpacity } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { MealContext } from '../../context/MealContext';
+
+type FormDataProps = {
+    id: string
+    name: string
+    description: string
+    date: string
+    hour: string
+    isPartOfTheDiet: boolean
+}
+
+type RouteParams = {
+    mealId: string
+}
+
+export function EditMeal(){
+    const theme = useTheme()
+    const navigation = useNavigation()
+    const { handleEditMeal } = useContext(MealContext)
+
+    const route = useRoute()
+    const { mealId } = route.params as RouteParams 
+    const {control, handleSubmit, formState: {errors } } = useForm<FormDataProps>()
+
+    const [isPartOfTheDiet, setIsPartOfTheDiet] = useState(false)
+    const [firstButtonActive, setFirstButtonActive] = useState(false)
+    const [secondButtonActive, setSecondButtonActive] = useState(false)
+
+    function handleActiveButton(buttonId: number){
+        if(buttonId === 1){
+            setIsPartOfTheDiet(true)
+            setFirstButtonActive(!firstButtonActive)
+            setSecondButtonActive(false)
+        }else{
+            setIsPartOfTheDiet(false)
+            setSecondButtonActive(!secondButtonActive)
+            setFirstButtonActive(false)
+        }
+    }
+
+    function handleAlterMeal(data: FormDataProps){
+        const meal = {
+            id: mealId,
+            name: data.name,
+            description: data.description,
+            date: data.date,
+            hour: data.hour,
+            isPartOfTheDiet: isPartOfTheDiet
+        }
+
+        handleEditMeal(meal)
+
+        navigation.navigate('home')
+    }
+
+    return(
+        <EditMealContainer>
+            <EditMealHeaderContainer>
+                <BackButton onPress={() => navigation.navigate('home')}>
+                    <Ionicons
+                        name='arrow-back-outline'
+                        color={theme.COLORS.gray_100}
+                        size={24}
+                    />
+                </BackButton>
+
+                <TitleText color="black" style={{marginLeft: 50}}>
+                    Editar Refeição
+                </TitleText>
+            </EditMealHeaderContainer>
+
+            <EditMealForm>
+                <Row>
+                    <RegularText color="black" isBold={true}>Nome</RegularText>
+                </Row>
+                <Controller
+                    control={control}
+                    name="name"
+                    rules={{
+                        required: "Informe o nome da refeição"
+                    }}
+                    render={({ field : { onChange }}) => (
+                        <Input
+                            width={327}
+                            height={50}
+                            onChangeText={onChange}
+                        />
+                    )}
+                />
+                <ErrorText>{errors.name?.message}</ErrorText>
+                
+                <Row>
+                    <RegularText color="black" isBold={true}>Descrição</RegularText>
+                </Row>
+
+                <Controller
+                    control={control}
+                    name="description"
+                    rules={{
+                        required: "Informe a descrição da refeição"
+                    }}
+                    render={({ field : { onChange }}) => (
+                        <Input
+                            width={327}
+                            height={120}
+                            onChangeText={onChange}
+                        />
+                    )}
+                />
+                <ErrorText>{errors.description?.message}</ErrorText>
+                <Row>
+                    <Column>
+                        <Row>
+                            <RegularText color="black" isBold={true}>Data</RegularText>
+                        </Row>
+
+                        <Controller
+                            control={control}
+                            name="date"
+                            rules={{
+                                required: "Informe a data da refeição",
+                                pattern:{
+                                    value: /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/\d{4}$/,
+                                    message: 'Por favor, insira uma data no formato dd/mm/yyyy'
+                                }
+                            }}
+                            render={({ field: { onChange }}) => (
+                                <Input
+                                    width={153}
+                                    height={50}
+                                    onChangeText={onChange}
+                                />
+                            )}
+                        
+                        />
+                        <ErrorText>{errors.date?.message}</ErrorText>
+                    </Column>
+                    
+                    <Column>
+                        <Row>
+                            <RegularText color="black" isBold={true}>Hora</RegularText>
+                        </Row> 
+                        <Controller
+                            control={control}
+                            name="hour"
+                            rules={{
+                                required: "Informe o horário da refeição",
+                                pattern:{
+                                    value: /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/,
+                                    message: 'Por favor insira um horário no formato HH:MM'
+                                }
+                                
+                            }}
+                            render={({ field: {onChange }}) => (
+                                <Input
+                                    width={153}
+                                    height={50}
+                                    onChangeText ={onChange}  
+                                />
+                            )}
+                        
+                        />
+                        <ErrorText>{errors.hour?.message}</ErrorText>
+                    </Column>
+                </Row>
+                <Row>
+                    <RegularText color="black" isBold={true}>Está dentro da dieta?</RegularText>
+                </Row>
+                <OptionsButtonsContainer>
+                    <TouchableOpacity onPress={() => handleActiveButton(1)}>
+                        <OptionButton 
+                            background="green"
+                            id={1}
+                            isActive={firstButtonActive}
+                            title="Sim"
+                            handleActiveButton={handleActiveButton}
+                        />
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity onPress={() => handleActiveButton(2)}>
+                        <OptionButton 
+                            background="red"
+                            id={2}
+                            isActive={secondButtonActive}
+                            title="Não"
+                            handleActiveButton={handleActiveButton}
+                        />
+                    </TouchableOpacity>
+                </OptionsButtonsContainer>
+
+                <ButtonContainer>
+                    <Button
+                        background="black"
+                        colorTitle="white"
+                        title="Salvar alterações"
+                        width={327}
+                        onPress={handleSubmit(data => handleAlterMeal({...data, isPartOfTheDiet: isPartOfTheDiet}))}
+                    />
+                </ButtonContainer>  
+            </EditMealForm>
+        </EditMealContainer>
+    )
+}
